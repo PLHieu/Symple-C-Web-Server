@@ -1,22 +1,152 @@
 ﻿#include <winsock2.h>
 #include <windows.h>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <ws2tcpip.h>
 #include <thread>
 #include <vector>
 #include <chrono>
 #include <time.h>
+#include <string>
 
 #pragma comment (lib, "ws2_32.lib")
 
 #define DEFAULT_HTTP_PORT "80"
 
-void handleClient(SOCKET clientSocket, char* stillwork_flag);
-void handleMessage(char* buff);
-void wait(int* miliseconds, char* is_timeout);
-
 using namespace std;
+
+//void handleClient(SOCKET clientSocket, char* stillwork_flag);
+//
+//void handleMessage(char* buff);
+
+
+void handleMessage(char *&buff)
+{
+
+	istringstream data(buff);
+	vector<string> words((istream_iterator<string>(data)), istream_iterator<string>());
+
+	// chua response
+	ostringstream resp;
+	// htmlfile_name chua ten cua file tra ve , dung de luu trong response 
+	// htmlfile_content chua noi dung
+	string htmlfile_name = "";
+	string htmlfile_content = "";
+	int ReturnCode;
+
+	// lay ten file
+	if (htmlfile_name == "/")
+	{
+		htmlfile_name = "../index.html";
+	}
+	else {
+		htmlfile_name = words[1];
+	}
+
+	// can phai xoa dong nay khi hoan thanh xong project
+	htmlfile_name.insert(0, "..");
+
+	ifstream f;
+	f.open(htmlfile_name);
+
+	// neu nhu mo file khong duoc thi html -> 404.html
+	if (!f.is_open()) {
+		htmlfile_name = "../404.html";
+	}
+
+	// nap du lieu tu trong htmlfile vao trong htmlfile_content
+	string str((istreambuf_iterator<char>(f)), istreambuf_iterator<char>());
+	htmlfile_content = str;
+	ReturnCode = 200;
+	f.close();
+
+	if (words[0] == "GET") {
+		// response cho phuong thuc GET
+		resp << "HTTP/1.1 " << ReturnCode << " OK\r\n";
+		resp << "Cache-Control: no-cache, private\r\n";
+		//resp << "Last-Modified: " << ;
+		resp << "Content-Length: " << htmlfile_content.size() << "\r\n";
+		resp << "Content-Type: text/html\r\n";
+		resp << "\r\n";
+		resp << htmlfile_content;
+	}
+	else if (words[0] == "POST") {
+		// respond cho phuong thuc POST
+		resp << "HTTP/1.1 " << ReturnCode << " OK\r\n";
+		resp << "Cache-Control: no-cache, private\r\n";
+		resp << "Content-Type: text/html\r\n";
+		resp << "Content-Length: " << htmlfile_content.size() << "\r\n";
+		resp << "\r\n";
+		resp << htmlfile_content;
+	}
+	else {
+		// tra lai bad resquest
+	}
+
+	//cout << resp.str();
+	// dua lai response vao trong buff
+	strcpy(buff, resp.str().c_str());
+}
+
+void handleClient(SOCKET clientSocket, char* stillwork_flag)
+{
+	//transmit file
+	int buffsize = 10000;
+	char* buff = new char[10000];
+	int r;
+	do {
+		r = recv(clientSocket, buff, buffsize, 0);
+		if (r > 0)
+		{
+			cout << "received: " << buff << endl;
+
+			handleMessage(buff);
+
+			int v = send(clientSocket, buff, r, 0);
+			if (v == SOCKET_ERROR)
+			{
+				cout << "send failed" << endl;
+			}
+			else
+			{
+				cout << "sent: " << buff << endl;
+			}
+		}
+		else if (r == 0)
+		{
+			cout << "Connection closing" << endl;
+		}
+		else//r<0
+		{
+			cout << "receive fail" << endl;
+			closesocket(clientSocket);
+			*stillwork_flag = false;
+			return;
+		}
+	} while (r > 0);
+
+	//done, shutdown connection
+	int k = shutdown(clientSocket, SD_SEND);
+	if (k == SOCKET_ERROR)
+	{
+		cout << "Shutdown connection error! force to close..." << endl;
+	}
+
+	closesocket(clientSocket);
+	*stillwork_flag = 0;
+}
+
+//void wait(int* miliseconds, char* is_timeout);
+void wait(int* miliseconds, char* is_timeout)
+{
+	do {
+		std::this_thread::sleep_for(chrono::milliseconds(100));
+		miliseconds -= 100;
+	} while (*miliseconds <= 0);
+	*is_timeout = 1;
+}
+
 int main(int argc, char* argv[])
 {
 	WSADATA wd;
@@ -148,130 +278,4 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-void handleClient(SOCKET clientSocket, char* stillwork_flag)
-{
-	//transmit file
-	int buffsize = 10000;
-	char buff[10000];
-	int r;
-	do {
-		r = recv(clientSocket, buff, buffsize, 0);
-		if (r > 0)
-		{
-			cout << "received: " << buff << endl;
-			
-			handleMessage(buff);
 
-			int v = send(clientSocket, buff, r, 0);
-			if (v == SOCKET_ERROR)
-			{
-				cout << "send failed" << endl;
-			}
-			else
-			{
-				cout << "sent: " << buff << endl;
-			}
-		}
-		else if (r == 0)
-		{
-			cout << "Connection closing" << endl;
-		}
-		else//r<0
-		{
-			cout << "receive fail" << endl;
-			closesocket(clientSocket);
-			*stillwork_flag = false;
-			return;
-		}
-	} while (r > 0);
-	
-	//done, shutdown connection
-	int k = shutdown(clientSocket, SD_SEND);
-	if (k == SOCKET_ERROR)
-	{
-		cout << "Shutdown connection error! force to close..." << endl;
-	}
-
-	closesocket(clientSocket);
-	*stillwork_flag = 0;
-}
-
-void handleMessage(char* buff)
-{
-
-	const char filename[] = "../../index.html";
-	string messtemp;
-	ifstream filetoreturn;
-	filetoreturn.open(filename);
-	if (!filetoreturn.is_open())
-	{
-		return;
-	}
-
-	
-	int i = 0;
-	while (!filetoreturn.eof())
-	{
-		filetoreturn.read(buff + i, 1);
-		i++;
-	}
-
-	//get time
-	char buff_time[100];
-	time_t t;
-	const time_t* const ct = &t;
-	tm tmr;
-	tm* const tl = &tmr;
-	time(&t);
-	localtime_s(tl, ct);
-	strftime(buff_time, 100, "Thu, %d %m %Y %H:%M:%S", tl);
-	string str_time = "Date: " + string(buff_time) + "\n";
-
-	int len = i--;
-	char str_num[10];
-	_itoa_s(len, str_num, 10);
-	int nline = 8;
-	string line[10] = {
-		"HTTP/1.1 200 OK\n",
-		"Connection: keep-alive\n",
-		str_time,
-		"Server: PServer/1.0\n",
-		"Last-Modified: Thu, 18 June 2020 16:22:29\n",
-		"Content-Length: " + string(str_num) +"\n",
-		"Content-Type: text/html\n"
-		"\n"
-	};
-
-	int k = 0;
-	for (i = 0; i < nline; i++)
-	{
-		for (int j = 0; j < int(line[i].size()); j++)
-		{
-			buff[k] = line[i][j];
-			k++;
-		}
-	}
-	filetoreturn.close();
-	filetoreturn.open(filename);
-	if (!filetoreturn.is_open())
-	{
-		return;
-	}
-	for (int i = 0; i < len; i++)
-	{
-		filetoreturn.read(buff + k, 1);
-		k++;
-	}
-
-	buff[--k] = 0;
-	filetoreturn.close();
-}
-
-void wait(int* miliseconds, char* is_timeout)
-{
-	do {
-		std::this_thread::sleep_for(chrono::milliseconds(100));
-		miliseconds -= 100;
-	} while (*miliseconds <= 0);
-	*is_timeout = 1;
-}

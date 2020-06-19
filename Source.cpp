@@ -34,28 +34,54 @@ void handleMessage(char *&buff)
 	string htmlfile_name = "";
 	string htmlfile_content = "";
 	int ReturnCode;
-
-	// lay ten file
-	if (htmlfile_name == "/")
-	{
-		htmlfile_name = "../index.html";
-	}
-	else {
-		htmlfile_name = words[1];
-	}
-
-	// can phai xoa dong nay khi hoan thanh xong project
-	htmlfile_name.insert(0, "..");
-
 	ifstream f;
-	f.open(htmlfile_name);
 
-	// neu nhu mo file khong duoc thi html -> 404.html, mo lai file do
-	if (!f.is_open()) {
-		htmlfile_name = "../404.html";
+	if (words[0] == "GET") {
+		// lay ten file
+		htmlfile_name = words[1];
+		if (htmlfile_name == "/")
+		{
+			htmlfile_name = "/index.html";
+		}
+
+		// can phai xoa dong nay khi hoan thanh xong project
+		htmlfile_name.insert(0, "..");
+
+		
 		f.open(htmlfile_name);
+
+		// neu nhu mo file khong duoc thi html -> 404.html, mo lai file do
+		if (!f.is_open()) {
+			htmlfile_name = "../404.html";
+			f.open(htmlfile_name);
+		}
+
+	}
+	else if (words[0] == "POST") {
+
+		string request_str = data.str();
+
+		// xac thuc username va password
+		int pos_username = request_str.find("username");
+		int pos_end = request_str.find("Í");
+		int pos_password = request_str.find("password");
+
+		string username = request_str.substr(pos_username + 9, pos_password - pos_username - 10);
+		string pass = request_str.substr(pos_password + 9, pos_end - pos_password - 9);
+
+		if (username == "admin" && pass == "admin") {
+			htmlfile_name = "../info.html";
+		}
+		else {
+			htmlfile_name = "../404.html";
+		}
+
+		f.open(htmlfile_name);
+
 	}
 
+
+	// tien hanh ghi du lieu vao response
 	// nap du lieu tu trong htmlfile vao trong htmlfile_content
 	string str((istreambuf_iterator<char>(f)), istreambuf_iterator<char>());
 	htmlfile_content = str;

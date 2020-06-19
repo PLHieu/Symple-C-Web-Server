@@ -50,9 +50,10 @@ void handleMessage(char *&buff)
 	ifstream f;
 	f.open(htmlfile_name);
 
-	// neu nhu mo file khong duoc thi html -> 404.html
+	// neu nhu mo file khong duoc thi html -> 404.html, mo lai file do
 	if (!f.is_open()) {
 		htmlfile_name = "../404.html";
+		f.open(htmlfile_name);
 	}
 
 	// nap du lieu tu trong htmlfile vao trong htmlfile_content
@@ -84,7 +85,7 @@ void handleMessage(char *&buff)
 		// tra lai bad resquest
 	}
 
-	//cout << resp.str();
+	cout << resp.str();
 	// dua lai response vao trong buff
 	strcpy(buff, resp.str().c_str());
 }
@@ -100,10 +101,9 @@ void handleClient(SOCKET clientSocket, char* stillwork_flag)
 		if (r > 0)
 		{
 			cout << "received: " << buff << endl;
-
 			handleMessage(buff);
 
-			int v = send(clientSocket, buff, r, 0);
+			int v = send(clientSocket, buff, strlen(buff), 0);
 			if (v == SOCKET_ERROR)
 			{
 				cout << "send failed" << endl;

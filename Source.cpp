@@ -52,7 +52,7 @@ void handleMessage(char*& buff)
 		if (f == NULL) {
 			cout << strerror(errno); 
 			file_name = "../404.html";
-			f = fopen(file_name.c_str(), "wb");
+			f = fopen(file_name.c_str(), "rb");
 		}
 	}
 	else if (words[0] == "POST") {

@@ -1,0 +1,46 @@
+*{
+    margin:0;
+    padding:0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+}
+table tr{
+    display: flex;
+    justify-content: space-around;
+}
+
+th:nth-child(1), td:nth-child(1){
+    width: 40%;
+}
+
+th,td{
+    width: 20%;
+    padding: 10px;
+
+}
+
+tr:nth-child(1){
+    background-color: #03A9F4 !important;
+    padding: 10px;
+    font-size: 19px;
+    font-family: 'Mali', cursive;
+}
+
+
+
+tr:nth-child(even){
+    background-color: #a9a9a9ad;
+}
+
+td:nth-child(1){
+    font-weight: 400;
+    color: #2196F3;
+}
+
+
+td:nth-child(3){
+    color: blue;
+}
+
+a{
+    width: 80% ;
+}

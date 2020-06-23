@@ -217,37 +217,7 @@ void wait(int* miliseconds, char* is_timeout)
 int main(int argc, char* argv[])
 {
 
-	//FILE* f = fopen("../plh.jpg", "r+b");
-	//fseek(f, 0, SEEK_END);
-	//int fileLength = ftell(f);
-	//rewind(f);
-	//char* buffer  = (char*)malloc(sizeof(char) * fileLength);
-	//int b = sizeof(char);
-	//int a = fread(buffer, 1,  fileLength, f);
-	//fclose(f);
-
-	//free(buffer);
-
-	//ifstream fin("../plh.jpg");
-	//ostringstream ostrm;
-	//ostrm << fin.rdbuf();
-	//cout << fin.rdbuf();
-	////cout << ostrm;
-
-	//const string tmp = ostrm.str();
-
-	//char* cstr = new char [2303932]; 
-	//memcpy(cstr, tmp.c_str(), tmp.size());
-	////
-	////for (size_t i = 0; i < 4; i++)
-	////{
-	////	char c = tmp[i];
-	////	printf("%c", &c);
-	////}
-
-	//char c = buffer[74];
-
-	//free(cstr);
+	
 	WSADATA wd;
 	int k = WSAStartup(MAKEWORD(2, 2), &wd);
 	addrinfo hint_adinf;

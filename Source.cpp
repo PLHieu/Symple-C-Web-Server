@@ -1,4 +1,5 @@
-﻿#include <winsock2.h>
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include <winsock2.h>
 #include <windows.h>
 #include <iostream>
 #include <sstream>
@@ -22,7 +23,7 @@ using namespace std;
 //void handleMessage(char* buff);
 
 
-int get_ext( char* file) {
+int get_ext(char* file) {
 	if (strstr(file, ".jpg") != NULL)
 		return 1;
 	if (strstr(file, ".css") != NULL)
@@ -30,10 +31,10 @@ int get_ext( char* file) {
 	return 3; // cac loai file con lai
 }
 
-void handleMessage(char*& buff, int &buffsize)
+int handleMessage(char*& buff, int& buffsize)
 {
 
-	char temp[100] ;
+	char temp[100];
 	memcpy(temp, buff, 100);
 
 	// chua response
@@ -42,12 +43,12 @@ void handleMessage(char*& buff, int &buffsize)
 	char* requestType = strtok(temp, " ");
 	char* filename = strtok(NULL, " ");
 	int ReturnCode = 200;
-	FILE *f = NULL ; // file
+	FILE* f = NULL; // file
 
-	if (strcmp(requestType,"GET")==0) {
+	if (strcmp(requestType, "GET") == 0) {
 		// lay ten file
 		if (strcmp(filename, "/") == 0)
-		{	
+		{
 			strcpy(filename, "/index.html");
 		}
 
@@ -79,7 +80,7 @@ void handleMessage(char*& buff, int &buffsize)
 		memcpy(password, pos_password + 10, 5);
 
 
-		if (strncmp(username, "admin", 5) == 0 && strncmp(password, "admin", 5)  == 0) {
+		if (strncmp(username, "admin", 5) == 0 && strncmp(password, "admin", 5) == 0) {
 			strcpy(filename, "../info.html");
 		}
 		else {
@@ -89,7 +90,10 @@ void handleMessage(char*& buff, int &buffsize)
 
 		f = fopen(filename, "rb");
 	}
-
+	else
+	{
+		return -1;
+	}
 	// kiem tra loai file
 	//int ext = get_ext(file_name.c_str());
 	int ext = get_ext(filename);
@@ -110,14 +114,14 @@ void handleMessage(char*& buff, int &buffsize)
 
 	// nao header - phan content type
 	switch (ext) {
-		case 1:
-			resp << "Content-Type: image/jpg\r\n";
-			break;
-		case 2:
-			resp << "Content-Type: text/css\r\n";
-			break;
+	case 1:
+		resp << "Content-Type: image/jpg\r\n";
+		break;
+	case 2:
+		resp << "Content-Type: text/css\r\n";
+		break;
 	}
-		
+
 	resp << "Content-Transfer-Encoding: binary\r\n";
 	resp << "Content-Length: " << fileLength << "\r\n";
 	resp << "\r\n";
@@ -129,23 +133,25 @@ void handleMessage(char*& buff, int &buffsize)
 	int headerLength = strlen(buff);
 
 	char* bufftemp = new char[fileLength];
-	fread(bufftemp, sizeof(char),  fileLength, f);
+	fread(bufftemp, sizeof(char), fileLength, f);
 	memcpy(buff + headerLength, bufftemp, fileLength);
 
 	// tra ve size cua buffer
 	buffsize = headerLength + fileLength;
 
 	// giai phong vung nho, dong file
-	delete[] bufftemp;
 	fclose(f);
+	delete[] bufftemp;
+	return 0;
 }
 
 
 
 void handleClient(SOCKET clientSocket, char* stillwork_flag)
 {
+	cout << clientSocket << endl;
 	//transmit file
-	int buffsize = 200000;
+	int buffsize = 3000000;
 	char* buff = new char[buffsize];
 	int r;
 	do {
@@ -155,9 +161,13 @@ void handleClient(SOCKET clientSocket, char* stillwork_flag)
 			//r = recv(clientSocket, buff, buffsize, 0);
 
 			cout << "received: " << buff << endl;
-			handleMessage(buff, buffsize);
+			int hmr = handleMessage(buff, buffsize);
 
-			int v = send(clientSocket, buff, buffsize, 0);
+			int v = 0;
+			if (hmr==0)
+			{
+				v = send(clientSocket, buff, buffsize, 0);
+			}
 			if (v == SOCKET_ERROR)
 			{
 				cout << "send failed" << endl;
@@ -248,7 +258,7 @@ int main(int argc, char* argv[])
 		cout << "WSAStartup fail" << endl;
 		return 0;
 	}
-	
+
 	//get address information
 	ZeroMemory(&hint_adinf, sizeof(hint_adinf));
 	hint_adinf.ai_family = AF_INET;
@@ -271,11 +281,11 @@ int main(int argc, char* argv[])
 		WSACleanup();
 		return 0;
 	}
-	
+
 	k = bind(listenSocket, res_adinf->ai_addr, (int)res_adinf->ai_addrlen);
 	if (k == SOCKET_ERROR)
 	{
-		cout << "Bind socket with address fail. Error: "<< WSAGetLastError() << endl;
+		cout << "Bind socket with address fail. Error: " << WSAGetLastError() << endl;
 		freeaddrinfo(res_adinf);
 		closesocket(listenSocket);
 		WSACleanup();
@@ -295,7 +305,7 @@ int main(int argc, char* argv[])
 	SOCKET clientSocket;
 	//vector<thread*> handleFunctions;
 	vector<char*>stillwork_flag_ptr;//0 or 1
-	
+
 	//int time_wait = 30000;
 	//int tclock = time_wait;
 	//char is_timeout = 0;
@@ -312,7 +322,7 @@ int main(int argc, char* argv[])
 		*c_ptr = 1;
 		stillwork_flag_ptr.push_back(c_ptr);
 		thread(handleClient, clientSocket, c_ptr).detach();
-		
+
 		//delete closed thread
 		int i = 0;
 		for (; i < int(stillwork_flag_ptr.size());)
@@ -329,7 +339,7 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		cout <<"###############################\n############\n#####################" <<stillwork_flag_ptr.size()<<"\n#########################3\n" << endl;
+		cout << "###############################\n############\n#####################" << stillwork_flag_ptr.size() << "\n#########################3\n" << endl;
 		/*if (stillwork_flag_ptr.size() == 0)
 		{
 			if (is_timeout)
@@ -346,7 +356,7 @@ int main(int argc, char* argv[])
 		}*/
 
 	} while (1);
-	
+
 	int i = 0;
 	for (; i < int(stillwork_flag_ptr.size());)
 	{
@@ -361,11 +371,9 @@ int main(int argc, char* argv[])
 			i++;
 		}
 	}
-	
+
 	cout << "Server stopped!" << endl;
 	closesocket(listenSocket);
 	WSACleanup();
 	return 0;
 }
-
-

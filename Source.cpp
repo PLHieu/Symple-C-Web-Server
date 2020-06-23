@@ -22,7 +22,7 @@ using namespace std;
 //void handleMessage(char* buff);
 
 
-int get_ext(const char* file) {
+int get_ext( char* file) {
 	if (strstr(file, ".jpg") != NULL)
 		return 1;
 	if (strstr(file, ".css") != NULL)
@@ -33,62 +33,66 @@ int get_ext(const char* file) {
 void handleMessage(char*& buff, int &buffsize)
 {
 
-	istringstream data(buff);
-	vector<string> words((istream_iterator<string>(data)), istream_iterator<string>());
+	char temp[100] ;
+	memcpy(temp, buff, 100);
 
 	// chua response
 	ostringstream resp;
-	// file_name chua ten cua file tra ve , dung de luu trong response 
-	string file_name = "";
+
+	char* requestType = strtok(temp, " ");
+	char* filename = strtok(NULL, " ");
 	int ReturnCode = 200;
 	FILE *f = NULL ; // file
 
-	if (words[0] == "GET") {
+	if (strcmp(requestType,"GET")==0) {
 		// lay ten file
-		file_name = words[1];
-		if (file_name == "/")
+		if (strcmp(filename, "/") == 0)
 		{	
-			file_name = "/index.html";
+			strcpy(filename, "/index.html");
 		}
 
-		file_name.insert(0,"..");
+		for (int i = strlen(filename); i >= 0; i--) {
+			filename[i + 2] = filename[i];
+		}
+		filename[0] = '.';
+		filename[1] = '.';
 
 		// mo file duo dang nhi phan
-		f = fopen(file_name.c_str(), "rb");
+		f = fopen(filename, "rb");
 
 		// neu nhu mo file khong duoc thi  -> 404.html, mo lai file do
 		if (f == NULL) {
 			//cout << strerror(errno); 
 			ReturnCode = 404;
-			file_name = "../404.html";
-			f = fopen(file_name.c_str(), "rb");
+			strcpy(filename, "../404.html");
+			f = fopen(filename, "rb");
 		}
 	}
-	else if (words[0] == "POST") {
+	else if (strcmp(requestType, "POST") == 0) {
 
-		string request_str = data.str();
+		char username[5];
+		char password[5];
+		// xac thuc username va password;
+		char* pos_username = strstr(buff, "username=");
+		memcpy(username, pos_username + 9, 5);
+		char* pos_password = strstr(buff, "&password=");
+		memcpy(password, pos_password + 10, 5);
 
-		// xac thuc username va password
-		int pos_username = request_str.find("username");
-		int pos_end = request_str.find("Í");
-		int pos_password = request_str.find("password");
 
-		string username = request_str.substr(pos_username + 9, pos_password - pos_username - 10);
-		string pass = request_str.substr(pos_password + 9, pos_end - pos_password - 9);
-
-		if (username == "admin" && pass == "admin") {
-			file_name = "../info.html";
+		if (strncmp(username, "admin", 5) == 0 && strncmp(password, "admin", 5)  == 0) {
+			strcpy(filename, "../info.html");
 		}
 		else {
-			file_name = "../404.html";
+			strcpy(filename, "../404.html");
+			ReturnCode = 404;
 		}
 
-		f = fopen(file_name.c_str(), "rb");
-
+		f = fopen(filename, "rb");
 	}
 
 	// kiem tra loai file
-	int ext = get_ext(file_name.c_str());
+	//int ext = get_ext(file_name.c_str());
+	int ext = get_ext(filename);
 
 	// tinh toan length cua file 
 	fseek(f, 0, SEEK_END);
@@ -136,94 +140,7 @@ void handleMessage(char*& buff, int &buffsize)
 	fclose(f);
 }
 
-void handleMessage1(char*& buff) {
-	istringstream data(buff);
-	vector<string> words((istream_iterator<string>(data)), istream_iterator<string>());
 
-	// chua response
-	ostringstream resp;
-	// file_name chua ten cua file tra ve , dung de luu trong response 
-	string file_name = "";
-	int ReturnCode;
-	ifstream f;
-
-	if (words[0] == "GET") {
-		// lay ten file
-		file_name = words[1];
-		if (file_name == "/")
-		{	
-			file_name = "/index.html";
-		}
-
-		file_name.insert(0,"..");
-		 //const char* a = file_name.c_str() +1;
-		// mo file duo dang nhi phan
-		f.open(file_name,ifstream::binary);
-
-		// neu nhu mo file khong duoc thi  -> 404.html, mo lai file do
-		if (!f.is_open()) {
-			cout << strerror(errno); 
-			file_name = "../404.html";
-			f.open(file_name,ifstream::binary);
-		}
-	}
-	//else if (words[0] == "POST") {
-
-	//	string request_str = data.str();
-
-	//	// xac thuc username va password
-	//	int pos_username = request_str.find("username");
-	//	int pos_end = request_str.find("Í");
-	//	int pos_password = request_str.find("password");
-
-	//	string username = request_str.substr(pos_username + 9, pos_password - pos_username - 10);
-	//	string pass = request_str.substr(pos_password + 9, pos_end - pos_password - 9);
-
-	//	if (username == "admin" && pass == "admin") {
-	//		file_name = "../info.html";
-	//	}
-	//	else {
-	//		file_name = "../404.html";
-	//	}
-
-	//	f = fopen(file_name.c_str(), "rb");
-
-	//}
-
-	ReturnCode = 200;
-
-	//// nap header truoc
-	//// response cho phuong thuc GET
-	//resp << "HTTP/1.1 " << ReturnCode << " OK\r\n";
-	//resp << "Cache-Control: no-cache, private\r\n";
-	//////resp << "Last-Modified: " << ;
-	////	// check xem co phai la anh hay khong 
-	//if (file_name == "../hvh.jpg" or file_name == "../plh.jpg") {
-	//	resp << "Content-Type: image/jpg\r\n";
-	//}
-	//resp << "Content-Transfer-Encoding: binary\r\n";
-	////resp << "Connection: close\r\n";
-	//resp << "Content-Length: " << fileLength << "\r\n";
-	////resp << "Content-Type: text/html\r\n";
-	//resp << "\r\n";
-
-	//// dua header response vao trong buff
-	//strcpy(buff, resp.str().c_str());
-
-	// tinh toan do dai cua file 
-	f.seekg(0, ios::end);
-	size_t length = f.tellg();
-	f.seekg(0, ios::beg);
-
-
-	// dua du lieu vao trong buff
-	char* bufftemp = new char[length];
-	*bufftemp = {0};
-	f.read(bufftemp, length ) ;
-
-	f.close();
-
-}
 
 void handleClient(SOCKET clientSocket, char* stillwork_flag)
 {

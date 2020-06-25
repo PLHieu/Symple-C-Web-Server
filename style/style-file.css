@@ -1,0 +1,51 @@
+*{
+    margin:0;
+    padding:0;
+    font-family: 'Roboto', sans-serif;
+}
+table tr{
+    display: flex;
+    justify-content: space-around;
+    margin: 20px;
+    border-radius: 11px;
+}
+
+th:nth-child(1), td:nth-child(1){
+    width: 40%;
+}
+
+th,td{
+    width: 20%;
+    padding: 10px;
+
+}
+
+tr:nth-child(1){
+    background-color: #16a085 !important;
+    padding: 10px;
+    font-size: 19px;
+    font-family: 'Mali', cursive;
+    color: ưhi;
+    color: white;
+    border-radius: 11px;
+    margin: 20px;
+}
+
+
+
+tr:nth-child(even){
+    background-color: #1abc9c;
+    color: white !important;
+}
+
+tr:nth-child(odd) {
+    background: #81ecec;
+    color: black;
+}
+
+
+a{
+    width: 80% ;
+    background-color: #fdcb6e;
+    text-align: center;
+}

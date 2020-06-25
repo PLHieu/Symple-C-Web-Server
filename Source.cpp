@@ -28,12 +28,16 @@ int get_ext(char* file) {
 		return 1;
 	if (strstr(file, ".css") != NULL)
 		return 2;
-	return 3; // cac loai file con lai
+	if (strstr(file, ".html") != NULL)
+		return 3;
+	return 4; // cac loai file con lai
 }
+
+
 
 int handleMessage(char*& buff, int& buffsize)
 {
-
+	cout << buff;
 	char temp[100];
 	memcpy(temp, buff, 100);
 
@@ -52,16 +56,16 @@ int handleMessage(char*& buff, int& buffsize)
 			strcpy(filename, "/index.html");
 		}
 
-		for (int i = strlen(filename); i >= 0; i--) {
-			filename[i + 2] = filename[i];
-		}
-		filename[0] = '.';
-		filename[1] = '.';
+		 for (int i = strlen(filename); i >= 0; i--) {
+		 	filename[i + 2] = filename[i];
+		 }
+		 filename[0] = '.';
+		 filename[1] = '.';
 
 		// mo file duo dang nhi phan
 		f = fopen(filename, "rb");
 
-		// neu nhu mo file khong duoc thi  -> 404.html, mo lai file do
+		// neu nhu mo file khong duoc thi  -> 404.html
 		if (f == NULL) {
 			//cout << strerror(errno); 
 			ReturnCode = 404;
@@ -88,21 +92,19 @@ int handleMessage(char*& buff, int& buffsize)
 			ReturnCode = 404;
 		}
 
+
 		f = fopen(filename, "rb");
 	}
 	else
 	{
 		return -1;
 	}
-	// kiem tra loai file
-	//int ext = get_ext(file_name.c_str());
-	int ext = get_ext(filename);
 
 	// tinh toan length cua file 
 	fseek(f, 0, SEEK_END);
 	int fileLength = ftell(f);
 	rewind(f);
-
+	 
 	// nap header cho response
 	if (ReturnCode == 404) {
 		resp << "HTTP/1.1 404 Not Found \r\n";
@@ -112,6 +114,10 @@ int handleMessage(char*& buff, int& buffsize)
 	}
 	resp << "Cache-Control: no-cache, private\r\n";
 
+	// kiem tra loai file
+	//int ext = get_ext(file_name.c_str());
+	int ext = get_ext(filename);
+
 	// nao header - phan content type
 	switch (ext) {
 	case 1:
@@ -119,6 +125,9 @@ int handleMessage(char*& buff, int& buffsize)
 		break;
 	case 2:
 		resp << "Content-Type: text/css\r\n";
+		break;
+	case 3:
+		resp << "Content-Type: text/html\r\n";
 		break;
 	}
 
@@ -138,14 +147,12 @@ int handleMessage(char*& buff, int& buffsize)
 
 	// tra ve size cua buffer
 	buffsize = headerLength + fileLength;
-
+		
 	// giai phong vung nho, dong file
 	fclose(f);
 	delete[] bufftemp;
 	return 0;
 }
-
-
 
 void handleClient(SOCKET clientSocket, char* stillwork_flag)
 {

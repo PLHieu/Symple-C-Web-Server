@@ -18,11 +18,6 @@
 
 using namespace std;
 
-//void handleClient(SOCKET clientSocket, char* stillwork_flag);
-//
-//void handleMessage(char* buff);
-
-
 int get_ext(char* file) {
 	if (strstr(file, ".jpg") != NULL)
 		return 1;
@@ -33,11 +28,8 @@ int get_ext(char* file) {
 	return 4; // cac loai file con lai
 }
 
-
-
 int handleMessage(char*& buff, int& buffsize)
 {
-	cout << buff;
 	char temp[100];
 	memcpy(temp, buff, 100);
 
@@ -83,16 +75,24 @@ int handleMessage(char*& buff, int& buffsize)
 		char* pos_password = strstr(buff, "&password=");
 		memcpy(password, pos_password + 10, 5);
 
-
 		if (strncmp(username, "admin", 5) == 0 && strncmp(password, "admin", 5) == 0) {
 			strcpy(filename, "../info.html");
 			ReturnCode = 301;
+
+			resp << "HTTP/1.1 " << ReturnCode << " Moved Permanently\r\n";
+			resp << "Location: " << filename << "\r\n";
+			resp << "Content-Transfer-Encoding: binary\r\n";
+			resp << "Content-Length: " << 0 << "\r\n";
+			resp << "\r\n";
+			// nap du lieu vao trong buff
+			strcpy(buff, resp.str().c_str());
+			buffsize = strlen(buff);
+			return 0;
 		}
 		else {
 			strcpy(filename, "../404.html");
 			ReturnCode = 404;
 		}
-
 
 		f = fopen(filename, "rb");
 	}
@@ -109,10 +109,6 @@ int handleMessage(char*& buff, int& buffsize)
 	// nap header cho response
 	if (ReturnCode == 404) {
 		resp << "HTTP/1.1 404 Not Found \r\n";
-	}
-	else if (ReturnCode == 301) {
-		resp << "HTTP/1.1 " << ReturnCode << " Moved Permanently\r\n";
-		resp << "Location: " << filename << "\r\n";
 	}
 	else {
 		resp << "HTTP/1.1 " << ReturnCode << " OK\r\n";
@@ -161,7 +157,7 @@ int handleMessage(char*& buff, int& buffsize)
 
 void handleClient(SOCKET clientSocket, char* stillwork_flag)
 {
-	cout << clientSocket << endl;
+	//cout << "Connection established at socket: "<<clientSocket << endl;
 	//transmit file
 	int buffsize = 3000000;
 	char* buff = new char[buffsize];
@@ -170,11 +166,8 @@ void handleClient(SOCKET clientSocket, char* stillwork_flag)
 		r = recv(clientSocket, buff, buffsize, 0);
 		if (r > 0)
 		{
-			//r = recv(clientSocket, buff, buffsize, 0);
-
-			cout << "received: " << buff << endl;
+			//cout << "\nreceived: " << buff << endl;
 			int hmr = handleMessage(buff, buffsize);
-
 			int v = 0;
 			if (hmr==0)
 			{
@@ -182,16 +175,16 @@ void handleClient(SOCKET clientSocket, char* stillwork_flag)
 			}
 			if (v == SOCKET_ERROR)
 			{
-				cout << "send failed" << endl;
+				cout << "\nsend failed" << endl;
 			}
-			else
+			/*else
 			{
 				cout << "sent: " << buff << endl;
-			}
+			}*/
 		}
 		else if (r == 0)
 		{
-			cout << "Connection closing" << endl;
+			//cout << "Connection at socket "<<clientSocket<<" closing" << endl;
 		}
 		else//r<0
 		{
@@ -207,29 +200,17 @@ void handleClient(SOCKET clientSocket, char* stillwork_flag)
 	int k = shutdown(clientSocket, SD_SEND);
 	if (k == SOCKET_ERROR)
 	{
-		cout << "Shutdown connection error! force to close..." << endl;
+		cout << "Shutdown connection at socket "<<clientSocket<<" got error!" << endl;
 	}
+	//cout << "Connection at socket "<<clientSocket<<" closed" << endl;
 
 	closesocket(clientSocket);
 	*stillwork_flag = 0;
-
 	delete[]buff;
-}
-
-//void wait(int* miliseconds, char* is_timeout);
-void wait(int* miliseconds, char* is_timeout)
-{
-	do {
-		std::this_thread::sleep_for(chrono::milliseconds(100));
-		miliseconds -= 100;
-	} while (*miliseconds <= 0);
-	*is_timeout = 1;
 }
 
 int main(int argc, char* argv[])
 {
-
-	
 	WSADATA wd;
 	int k = WSAStartup(MAKEWORD(2, 2), &wd);
 	addrinfo hint_adinf;
@@ -263,7 +244,11 @@ int main(int argc, char* argv[])
 		WSACleanup();
 		return 0;
 	}
-
+	//CHANGE SERVER IP ADDRESS HERE
+	res_adinf->ai_addr->sa_data[2] = 127;
+	res_adinf->ai_addr->sa_data[3] = 0;
+	res_adinf->ai_addr->sa_data[4] = 0;
+	res_adinf->ai_addr->sa_data[5] = 1;
 	k = bind(listenSocket, res_adinf->ai_addr, (int)res_adinf->ai_addrlen);
 	if (k == SOCKET_ERROR)
 	{
@@ -283,15 +268,10 @@ int main(int argc, char* argv[])
 		WSACleanup();
 		return 0;
 	}
-	//vector<SOCKET> clientSockets;
-	SOCKET clientSocket;
-	//vector<thread*> handleFunctions;
-	vector<char*>stillwork_flag_ptr;//0 or 1
+	cout << "Server started!" << endl;
 
-	//int time_wait = 30000;
-	//int tclock = time_wait;
-	//char is_timeout = 0;
-	//thread do_wait(wait, &tclock, &is_timeout);
+	SOCKET clientSocket;
+	vector<char*>stillwork_flag_ptr;//0 or 1
 	do
 	{
 		clientSocket = accept(listenSocket, NULL, NULL);
@@ -320,23 +300,6 @@ int main(int argc, char* argv[])
 				i++;
 			}
 		}
-
-		cout << "###############################\n############\n#####################" << stillwork_flag_ptr.size() << "\n#########################3\n" << endl;
-		/*if (stillwork_flag_ptr.size() == 0)
-		{
-			if (is_timeout)
-			{
-				do_wait.join();
-				break;
-			}
-			cout << "tclock: "<<tclock << endl;
-		}
-		else
-		{
-			cout << "Number of clients: "<<stillwork_flag_ptr.size() << endl;
-			tclock = time_wait;
-		}*/
-
 	} while (1);
 
 	int i = 0;

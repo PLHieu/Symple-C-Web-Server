@@ -86,6 +86,7 @@ int handleMessage(char*& buff, int& buffsize)
 
 		if (strncmp(username, "admin", 5) == 0 && strncmp(password, "admin", 5) == 0) {
 			strcpy(filename, "../info.html");
+			ReturnCode = 301;
 		}
 		else {
 			strcpy(filename, "../404.html");
@@ -108,6 +109,10 @@ int handleMessage(char*& buff, int& buffsize)
 	// nap header cho response
 	if (ReturnCode == 404) {
 		resp << "HTTP/1.1 404 Not Found \r\n";
+	}
+	else if (ReturnCode == 301) {
+		resp << "HTTP/1.1 " << ReturnCode << " Moved Permanently\r\n";
+		resp << "Location: " << filename << "\r\n";
 	}
 	else {
 		resp << "HTTP/1.1 " << ReturnCode << " OK\r\n";

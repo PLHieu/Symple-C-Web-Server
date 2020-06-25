@@ -1,0 +1,56 @@
+.thanhdieuhuong{
+    position: fixed;
+    top: 40%;
+    z-index: 1000;
+    right: 25px;
+    display: block;
+}
+
+.thanhdieuhuong a{
+    background-color: white;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 25px;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 15px;
+    display: block;
+    text-align: center;
+    box-shadow: 2px 2px 2px gray;
+}
+
+.thanhdieuhuong .detail{
+    top: 16px;
+    visibility: hidden;
+    position: absolute;
+    right: 100px;
+    width: 132px;
+    text-align: center;
+    transition: 0.5s;
+    opacity: 0;
+    font-size: 16px;
+    background-color: #22a6b3;
+    padding: 5px;
+    border-radius: 6px;
+    color: white;
+
+}
+
+.thanhdieuhuong a:hover ~.detail {
+    visibility: visible;
+    right: 73px;
+    opacity: 1;
+}
+.login, .file{
+    position: relative;
+}
+
+
+.thanhdieuhuong a:hover i {
+    transform: scale(1.5);
+}
+
+.thanhdieuhuong i{
+    transition: 0.5s;
+    color: #27ae60;
+}

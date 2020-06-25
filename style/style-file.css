@@ -3,6 +3,10 @@
     padding:0;
     font-family: 'Roboto', sans-serif;
 }
+
+table.col-md-12 {
+    max-width: 94% !important;
+}
 table tr{
     display: flex;
     justify-content: space-around;
@@ -25,7 +29,7 @@ tr:nth-child(1){
     padding: 10px;
     font-size: 19px;
     font-family: 'Mali', cursive;
-    color: ưhi;
+    color: Æ°hi;
     color: white;
     border-radius: 11px;
     margin: 20px;

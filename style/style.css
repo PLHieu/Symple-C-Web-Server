@@ -9,19 +9,12 @@ body {
   margin-bottom: 30px;
   font-weight: normal;
 }
-.login-form .social-icon {
-    width: 100%;
-    font-size: 20px;
-    padding-top: 20px;
-    color: #fff;
-    text-align: center;
-    float: left;
-}
+
 .login-form {
     background: #fff;
     width: 450px;
-    border-radius: 6px;
-    margin: 50px auto;
+    border-radius: 9px;
+    margin: 80px auto;
     display: table;
     padding: 15px 30px 30px;
     box-sizing: border-box;
@@ -72,64 +65,12 @@ body {
   height: 56px;
   cursor: pointer;
 }
-.login-form .reset-psw {
-  float: left;
-  width: 100%;
-  text-decoration: none;
-  color: #45aba6;
-  font-size: 14px;
-  text-align: center;
-  margin-top: 11px;
-}
-.login-form .social-icon button {
-    font-size: 20px;
-    color: white;
-    height: 50px;
-    width: 50px;
-    background: #45aba6;
-    border-radius: 60%;
-    margin: 0px 10px;
-    border: none;
-    cursor: pointer;
-    transition: 0.5s;
-    outline:none;
-}
+
+
 .login-form button:hover{
   opacity: 0.9;
 }
 
-.login-form .social-icon button:hover{
-  transform: rotate(40deg);
-}
-
-.login-form .seperator {
-  float: left;
-  width: 100%;
-  border-top: 1px solid #ccc;
-  text-align: center;
-  margin: 50px 0 0;
-}
-.login-form .seperator b {
-  width: 40px;
-  height: 40px;
-  font-size: 16px;
-  text-align: center;
-  line-height: 40px;
-  background: #fff;
-  display: inline-block;
-  border: 1px solid #e0e0e0;
-  border-radius: 50%;
-  position: relative;
-  top: -22px;
-  z-index: 1;
-}
-.login-form p {
-  float: left;
-  width: 100%;
-  text-align: center;
-  font-size: 16px;
-  margin: 0 0 10px;
-}
 @media screen and (max-width:767px) {
 .login-form {
     width: 90%;
